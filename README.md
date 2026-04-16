@@ -10,5 +10,8 @@ docker compose up -d
 bun run prisma:migrate
 bun run prisma:generate
 bun run prisma:seed
+bun run garage:setup
+bun run garage:init
 
-bun run dev 
+bun run dev
+```
