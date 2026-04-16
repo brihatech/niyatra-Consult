@@ -11,5 +11,4 @@ bun run prisma:migrate
 bun run prisma:generate
 bun run prisma:seed
 
-
 bun run dev 

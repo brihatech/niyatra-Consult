@@ -1,0 +1,167 @@
+"use client";
+
+import { Award, TrendingUp } from "lucide-react";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import type { KpiResult } from "../../schemas/kpi-schemas";
+
+interface Kpi3ResultsDisplayProps {
+  result: KpiResult;
+}
+
+function getScoreColor(score: number): string {
+  if (score >= 80) return "text-emerald-600 dark:text-emerald-400";
+  if (score >= 50) return "text-amber-600 dark:text-amber-400";
+  return "text-red-600 dark:text-red-400";
+}
+
+function getScoreBadgeVariant(
+  score: number,
+): "default" | "secondary" | "destructive" {
+  if (score >= 80) return "default";
+  if (score >= 50) return "secondary";
+  return "destructive";
+}
+
+export function Kpi3ResultsDisplay({ result }: Kpi3ResultsDisplayProps) {
+  return (
+    <div className="flex flex-col gap-6">
+      {/* ── Result Calculation ──────────────────────────── */}
+      <Card className="border-0 bg-card/60 shadow-lg backdrop-blur-sm">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-violet-600 text-white shadow-md">
+              <TrendingUp className="size-5" />
+            </div>
+            <div>
+              <CardTitle className="font-semibold text-lg tracking-tight">
+                Result Calculation
+              </CardTitle>
+              <p className="text-muted-foreground text-sm">
+                KPI {result.kpiNo}: {result.kpiName} — {result.subsetName}
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-violet-600 hover:bg-violet-600">
+                  <TableHead className="font-semibold text-white">Sub-Indicator</TableHead>
+                  <TableHead className="font-semibold text-white">Method</TableHead>
+                  <TableHead className="font-semibold text-right text-white">Result</TableHead>
+                  <TableHead className="font-semibold text-center text-white">Unit</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {result.subIndicators.map((sub) => (
+                  <TableRow key={sub.name}>
+                    <TableCell className="font-medium">{sub.name}</TableCell>
+                    <TableCell className="max-w-xs text-muted-foreground text-xs">{sub.method}</TableCell>
+                    <TableCell className={`text-right font-mono font-semibold text-sm ${getScoreColor(sub.result)}`}>
+                      {sub.result.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="outline" className="text-xs">{sub.unit}</Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── KPI Score Calculation ─────────────────────────── */}
+      <Card className="border-0 bg-card/60 shadow-lg backdrop-blur-sm">
+        <CardHeader className="pb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-amber-500 text-white shadow-md">
+              <Award className="size-5" />
+            </div>
+            <div>
+              <CardTitle className="font-semibold text-lg tracking-tight">
+                KPI Score Calculation
+              </CardTitle>
+              <p className="text-muted-foreground text-sm">
+                KPI Score = average of (a + b + c + d + e) across 5 subsets
+              </p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-violet-600 hover:bg-violet-600">
+                  <TableHead className="font-semibold text-white">Sub-Indicator</TableHead>
+                  <TableHead className="font-semibold text-center text-white">Scoring Range</TableHead>
+                  <TableHead className="font-semibold text-center text-white">Weight</TableHead>
+                  <TableHead className="font-semibold text-right text-white">KPI Score</TableHead>
+                  <TableHead className="font-semibold text-center text-white">Unit</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {result.subIndicators.map((sub) => (
+                  <TableRow key={sub.name}>
+                    <TableCell className="font-medium">{sub.name}</TableCell>
+                    <TableCell className="text-center text-sm">{sub.scoringRange}</TableCell>
+                    <TableCell className="text-center font-mono text-sm">{sub.weight}</TableCell>
+                    <TableCell className="text-right">
+                      <Badge variant={getScoreBadgeVariant(sub.kpiScore)} className="font-mono">
+                        {sub.kpiScore.toFixed(2)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center text-sm">{sub.unit}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* ── Subset Scores Breakdown ──────────────────── */}
+          {result.subsetScores && (
+            <div className="mt-4 rounded-lg border p-4">
+              <p className="mb-3 font-semibold text-sm">
+                Subset Score Breakdown (KPI Score = average of all subsets)
+              </p>
+              <div className="flex flex-col gap-2">
+                {result.subsetScores.map((ss) => (
+                  <div
+                    key={ss.name}
+                    className="flex items-center justify-between rounded-md bg-muted/50 px-4 py-2"
+                  >
+                    <span className="text-sm">{ss.name}</span>
+                    <Badge variant={getScoreBadgeVariant(ss.score)} className="font-mono">
+                      {ss.score.toFixed(2)}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Average KPI Score ─────────────────────────── */}
+          <div className="mt-6 flex items-center justify-end gap-4 rounded-lg border border-violet-200 bg-violet-50/60 p-4 dark:border-violet-900 dark:bg-violet-950/20">
+            <span className="font-semibold text-violet-800 text-sm dark:text-violet-300">
+              Average KPI Score
+            </span>
+            <div className={`rounded-lg px-5 py-2 font-bold text-2xl ${getScoreColor(result.averageKpiScore)}`}>
+              {result.averageKpiScore.toFixed(2)}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
