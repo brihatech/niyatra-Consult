@@ -28,7 +28,6 @@ export function Kpi2CalculatorContainer() {
           </div>
         </div>
         <div className="h-1 w-20 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500" />
-        <KpiNav />
       </div>
 
       {/* ── Content ──────────────────────────────────────── */}

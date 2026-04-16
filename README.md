@@ -1,7 +1,7 @@
 ## Clean Install
 
 ```bash
-npm install
+bun install
 
 docker compose up -d
 
