@@ -9,8 +9,7 @@ docker compose up -d
 
 bun run prisma:migrate
 bun run prisma:generate
-bun run .\scripts\seed.ts
-bun run garage:setup
-bun run garage:init
+bun run prisma:seed
+
 
 bun run dev 
