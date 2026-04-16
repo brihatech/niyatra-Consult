@@ -3,8 +3,6 @@ import "@/styles/globals.css";
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 
-import { TRPCReactProvider } from "@/trpc/react";
-
 export const metadata: Metadata = {
   title: "brihatech | Next.js Starter Template",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
@@ -20,9 +18,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html className={`${geist.variable}`} lang="en">
-      <body>
-        <TRPCReactProvider>{children}</TRPCReactProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
