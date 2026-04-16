@@ -7,5 +7,8 @@ export default async function Home() {
     <HydrateClient>
       <HomeContainer />
     </HydrateClient>
+    // <div>
+    //   welcome
+    // </div>
   );
 }
