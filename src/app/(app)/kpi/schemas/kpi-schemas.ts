@@ -9,7 +9,17 @@ export interface KpiDefinition {
   name: string;
   subtitle: string;
   href: string;
+  group: string;
 }
+
+export const KPI_GROUPS = [
+  "Level and Quality of Water Supply Service",
+  "Technical Operation",
+  "Financial Management",
+  "Commercial Operation",
+] as const;
+
+export type KpiGroup = (typeof KPI_GROUPS)[number];
 
 export const KPI_LIST: KpiDefinition[] = [
   {
@@ -17,24 +27,105 @@ export const KPI_LIST: KpiDefinition[] = [
     name: "Coverage",
     subtitle: "Population Coverage and Served",
     href: "/kpi/kpi-1",
+    group: "Level and Quality of Water Supply Service",
   },
   {
     id: 2,
     name: "Sufficiency",
     subtitle: "Quantity of Water Supply",
     href: "/kpi/kpi-2",
+    group: "Level and Quality of Water Supply Service",
   },
   {
     id: 3,
     name: "Quality",
     subtitle: "Safety of Water Supply",
     href: "/kpi/kpi-3",
+    group: "Level and Quality of Water Supply Service",
   },
   {
     id: 4,
     name: "Continuity",
     subtitle: "Continuity and Reliability",
     href: "/kpi/kpi-4",
+    group: "Level and Quality of Water Supply Service",
+  },
+  {
+    id: 5,
+    name: "Asset Management",
+    subtitle: "Operational and Management Efficiency",
+    href: "/kpi/kpi-5",
+    group: "Technical Operation",
+  },
+  {
+    id: 6,
+    name: "Maintenance",
+    subtitle: "Maintenance Capability",
+    href: "/kpi/kpi-6",
+    group: "Technical Operation",
+  },
+  {
+    id: 7,
+    name: "MTTR",
+    subtitle: "Mean Time to Repair",
+    href: "/kpi/kpi-7",
+    group: "Technical Operation",
+  },
+  {
+    id: 8,
+    name: "NRW",
+    subtitle: "Non-Revenue Water",
+    href: "/kpi/kpi-8",
+    group: "Technical Operation",
+  },
+  {
+    id: 9,
+    name: "Water Tariff",
+    subtitle: "Affordability",
+    href: "/kpi/kpi-9",
+    group: "Financial Management",
+  },
+  {
+    id: 10,
+    name: "Operating Ratio",
+    subtitle: "Income vs Cost",
+    href: "/kpi/kpi-10",
+    group: "Financial Management",
+  },
+  {
+    id: 11,
+    name: "CTI",
+    subtitle: "Contribution to Investment",
+    href: "/kpi/kpi-11",
+    group: "Financial Management",
+  },
+  {
+    id: 12,
+    name: "Accountability",
+    subtitle: "Financial Accountability",
+    href: "/kpi/kpi-12",
+    group: "Financial Management",
+  },
+  {
+    id: 13,
+    name: "Metering Ratio",
+    subtitle: "Metering Coverage",
+    href: "/kpi/kpi-13",
+    group: "Commercial Operation",
+  },
+  {
+    id: 14,
+    name: "Billing & Collection",
+    subtitle: "Billing and Collection Efficiency",
+    href: "/kpi/kpi-14",
+    group: "Commercial Operation",
+  },
+  {
+    id: 15,
+    name: "Customer Database",
+    subtitle: "Customer Database Management",
+    href: "/kpi/kpi-15",
+    group: "Commercial Operation",
   },
 ];
 
@@ -399,9 +490,7 @@ export const kpi3InputSchema = z.object({
   labTechnicians: z
     .number({ message: "Required" })
     .min(0, "Cannot be negative"),
-  chemists: z
-    .number({ message: "Required" })
-    .min(0, "Cannot be negative"),
+  chemists: z.number({ message: "Required" }).min(0, "Cannot be negative"),
 
   // Subset 3.4 — Parameters
   parametersChecked: z
@@ -443,8 +532,7 @@ export const KPI3_SUBSET31_QUESTIONS: DataInputQuestion<Kpi3Input>[] = [
 export const KPI3_SUBSET32_QUESTIONS: DataInputQuestion<Kpi3Input>[] = [
   {
     id: "samplesTestedPerYear",
-    question:
-      "How often are water samples tested in a year? (number of times)",
+    question: "How often are water samples tested in a year? (number of times)",
     unit: "no.",
     dataSource: "Lab Records",
   },
@@ -503,15 +591,22 @@ export function calculateKpi3(input: Kpi3Input): KpiResult {
   const subset32Score = subset32Result >= 100 ? 100 : subset32Result;
 
   // ── Subset 3.3: Designated Staff ────────────────────────────────
-  const mgmtScore = Math.min(input.labManagementStaff / EXPECTED_LAB_MANAGEMENT, 1);
-  const techScore = Math.min(input.labTechnicians / EXPECTED_LAB_TECHNICIANS, 1);
+  const mgmtScore = Math.min(
+    input.labManagementStaff / EXPECTED_LAB_MANAGEMENT,
+    1,
+  );
+  const techScore = Math.min(
+    input.labTechnicians / EXPECTED_LAB_TECHNICIANS,
+    1,
+  );
   const chemScore = Math.min(input.chemists / EXPECTED_CHEMISTS, 1);
   const subset33Score =
     Math.round(((mgmtScore + techScore + chemScore) / 3) * 100 * 100) / 100;
 
   // ── Subset 3.4: Parameters ──────────────────────────────────────
   const subset34Score =
-    Math.round((input.parametersChecked / EXPECTED_PARAMETERS) * 100 * 100) / 100;
+    Math.round((input.parametersChecked / EXPECTED_PARAMETERS) * 100 * 100) /
+    100;
 
   // ── Subset 3.5: Test Results ────────────────────────────────────
   const subset35Score = input.testResultsInAccordance === "Y" ? 100 : 0;
@@ -519,7 +614,13 @@ export function calculateKpi3(input: Kpi3Input): KpiResult {
   // ── Overall KPI 3 Score = average of 5 subset scores ───────────
   const averageKpiScore =
     Math.round(
-      ((subset31Score + subset32Score + subset33Score + subset34Score + subset35Score) / 5) * 100,
+      ((subset31Score +
+        subset32Score +
+        subset33Score +
+        subset34Score +
+        subset35Score) /
+        5) *
+        100,
     ) / 100;
 
   const subIndicators: SubIndicatorResult[] = [
@@ -579,9 +680,10 @@ export function calculateKpi3(input: Kpi3Input): KpiResult {
     },
     {
       name: "Test Results in Accordance",
-      method: input.testResultsInAccordance === "Y"
-        ? 'Answer = "Y" → Score = 100'
-        : 'Answer = "N" → Score = 0',
+      method:
+        input.testResultsInAccordance === "Y"
+          ? 'Answer = "Y" → Score = 100'
+          : 'Answer = "N" → Score = 0',
       result: subset35Score,
       unit: "letter",
       scoringRange: "0 – 100",
@@ -597,9 +699,17 @@ export function calculateKpi3(input: Kpi3Input): KpiResult {
     subIndicators,
     averageKpiScore,
     subsetScores: [
-      { name: "Subset 3.1 — Consumer Perceptions", score: subset31Score, weight: 1 },
+      {
+        name: "Subset 3.1 — Consumer Perceptions",
+        score: subset31Score,
+        weight: 1,
+      },
       { name: "Subset 3.2 — Functional Lab", score: subset32Score, weight: 1 },
-      { name: "Subset 3.3 — Designated Staff", score: subset33Score, weight: 1 },
+      {
+        name: "Subset 3.3 — Designated Staff",
+        score: subset33Score,
+        weight: 1,
+      },
       { name: "Subset 3.4 — Parameters", score: subset34Score, weight: 1 },
       { name: "Subset 3.5 — Test Results", score: subset35Score, weight: 1 },
     ],
@@ -683,14 +793,11 @@ export function calculateKpi4(input: Kpi4Input): KpiResult {
     subset43Score = 0;
   } else {
     subset43Score =
-      Math.round(
-        ((15 - disruptionResult) / 15) * weight * 100 * 100,
-      ) / 100;
+      Math.round(((15 - disruptionResult) / 15) * weight * 100 * 100) / 100;
   }
 
   // ── KPI Score = (a) + (b) where b rewards fewer disruptions ───
-  const averageKpiScore =
-    Math.round((scoreA + subset43Score) * 100) / 100;
+  const averageKpiScore = Math.round((scoreA + subset43Score) * 100) / 100;
 
   const subIndicators: SubIndicatorResult[] = [
     {
@@ -747,3 +854,927 @@ export function calculateKpi4(input: Kpi4Input): KpiResult {
     ],
   };
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// KPI 5 — Asset Management
+// ═══════════════════════════════════════════════════════════════════════
+
+export const KPI5_ASSET_OPTIONS = [
+  {
+    value: "A" as const,
+    label: "A) No Inventory of Infrastructure",
+    weight: 0,
+  },
+  {
+    value: "B" as const,
+    label:
+      "B) An inventory book with limited information about infrastructures that has not been updated",
+    weight: 0.5,
+  },
+  {
+    value: "C" as const,
+    label:
+      "C) Manually updated inventory of all infrastructure, complete with information on its location, condition, and O&M records",
+    weight: 0.8,
+  },
+  {
+    value: "D" as const,
+    label:
+      "D) An up-to-date digital inventory of infrastructure, and the Asset Layout Plan has been uploaded to the NWASH MIS",
+    weight: 0.9,
+  },
+  {
+    value: "E" as const,
+    label:
+      "E) An up-to-date digital inventory of infrastructure. The Asset Management Plan, which identifies the risk of significant failures, has been prepared and is being implemented. The NWASH MIS contains the Asset Layout Plan",
+    weight: 1,
+  },
+];
+
+export const kpi5InputSchema = z.object({
+  assetManagementLevel: z.enum(["A", "B", "C", "D", "E"], {
+    message: "Select an asset management level",
+  }),
+});
+
+export type Kpi5Input = z.infer<typeof kpi5InputSchema>;
+
+export function calculateKpi5(input: Kpi5Input): KpiResult {
+  const selected = KPI5_ASSET_OPTIONS.find(
+    (o) => o.value === input.assetManagementLevel,
+  );
+  const weight = selected?.weight ?? 0;
+  const kpiScore = Math.round(weight * 100 * 100) / 100;
+
+  const subIndicators: SubIndicatorResult[] = [
+    {
+      name: "Asset Management",
+      method: `Score = "Weight" corresponding to the "Result" × 100 → ${weight} × 100 = ${kpiScore}`,
+      result: weight,
+      unit: "letter",
+      scoringRange: "A – E",
+      weight,
+      kpiScore,
+    },
+  ];
+
+  return {
+    kpiNo: 5,
+    kpiName: "Asset Management",
+    subsetName: "Operational and Management Efficiency",
+    subIndicators,
+    averageKpiScore: kpiScore,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// KPI 6 — Maintenance Capability
+// ═══════════════════════════════════════════════════════════════════════
+
+export const KPI6_HR_OPTIONS = [
+  {
+    value: "A" as const,
+    label:
+      "A) Utility has employed the technical person including engineer, sub-engineer and plumber",
+    weight: 1,
+  },
+  {
+    value: "B" as const,
+    label:
+      "B) Utility has employed the technical person including sub-engineer and plumber",
+    weight: 0.6,
+  },
+  {
+    value: "C" as const,
+    label: "C) Utility have plumbers only",
+    weight: 0.4,
+  },
+  {
+    value: "D" as const,
+    label: "D) Utility does not have any technical personnel",
+    weight: 0.2,
+  },
+];
+
+export const kpi6InputSchema = z.object({
+  // Subset 6.1 — Human Resources for Maintenance
+  hrLevel: z.enum(["A", "B", "C", "D"], {
+    message: "Select a human resource level",
+  }),
+  // Subset 6.2 — Number of Maintenance
+  totalMaintenanceRequired: z
+    .number({ message: "Required" })
+    .positive("Must be positive"),
+  maintenanceCompleted: z
+    .number({ message: "Required" })
+    .min(0, "Cannot be negative"),
+});
+
+export type Kpi6Input = z.infer<typeof kpi6InputSchema>;
+
+export function calculateKpi6(input: Kpi6Input): KpiResult {
+  // ── Subset 6.1: Human Resources ─────────────────────────────────
+  const hrOption = KPI6_HR_OPTIONS.find((o) => o.value === input.hrLevel);
+  const hrWeight = hrOption?.weight ?? 0;
+  const subset61Score = Math.round(hrWeight * 100 * 100) / 100;
+
+  // ── Subset 6.2: Number of Maintenance ───────────────────────────
+  const maintenanceResult =
+    Math.round(
+      (input.maintenanceCompleted / input.totalMaintenanceRequired) * 100 * 100,
+    ) / 100;
+  const subset62Score = Math.min(maintenanceResult, 100);
+
+  // ── Aggregate KPI Score = (a) × 0.5 + (b) × 0.5 ───────────────
+  const averageKpiScore =
+    Math.round((subset61Score * 0.5 + subset62Score * 0.5) * 100) / 100;
+
+  const subIndicators: SubIndicatorResult[] = [
+    {
+      name: "Human Resources for Maintenance",
+      method: `Score (a) = Weight corresponding to "${input.hrLevel}" × 100 = ${hrWeight} × 100 = ${subset61Score}`,
+      result: hrWeight,
+      unit: "letter",
+      scoringRange: "A – D",
+      weight: 0.5,
+      kpiScore: subset61Score,
+    },
+    {
+      name: "Number of Maintenance",
+      method: `(Completed ${input.maintenanceCompleted} / Required ${input.totalMaintenanceRequired}) × 100 = ${maintenanceResult.toFixed(2)}%`,
+      result: maintenanceResult,
+      unit: "%",
+      scoringRange: "0 – 100",
+      weight: 0.5,
+      kpiScore: subset62Score,
+    },
+  ];
+
+  return {
+    kpiNo: 6,
+    kpiName: "Maintenance Capability",
+    subsetName: "Technical Operation",
+    subIndicators,
+    averageKpiScore,
+    subsetScores: [
+      {
+        name: "Subset 6.1 — Human Resources",
+        score: subset61Score,
+        weight: 0.5,
+      },
+      {
+        name: "Subset 6.2 — Number of Maintenance",
+        score: subset62Score,
+        weight: 0.5,
+      },
+    ],
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// KPI 7 — Mean Time to Repair (MTTR)
+// ═══════════════════════════════════════════════════════════════════════
+
+export const KPI7_RESERVE_FUND_OPTIONS = [
+  {
+    value: "A" as const,
+    label: "A) No reserve fund for unplanned breakdowns",
+    weight: 0,
+  },
+  {
+    value: "B" as const,
+    label:
+      "B) A limited reserve fund, that is adequate only for minor unplanned breakdowns",
+    weight: 0.25,
+  },
+  {
+    value: "C" as const,
+    label:
+      "C) Sufficient reserve fund for unplanned breakdowns and minor natural calamities, such as small landslides or floods",
+    weight: 0.5,
+  },
+  {
+    value: "D" as const,
+    label:
+      "D) An adequate reserve fund for unplanned breakdowns. Major infrastructures are insured against natural calamities such as earthquakes and flooding based on their vulnerability to the disaster",
+    weight: 1,
+  },
+];
+
+export const kpi7InputSchema = z.object({
+  // Subset 7.1 — Reserve Fund
+  reserveFundLevel: z.enum(["A", "B", "C", "D"], {
+    message: "Select a reserve fund level",
+  }),
+  // Subset 7.2 — Average Repair Time
+  totalUnplannedRepairs: z
+    .number({ message: "Required" })
+    .positive("Must be positive"),
+  totalRepairTimeHours: z
+    .number({ message: "Required" })
+    .min(0, "Cannot be negative"),
+});
+
+export type Kpi7Input = z.infer<typeof kpi7InputSchema>;
+
+export function calculateKpi7(input: Kpi7Input): KpiResult {
+  // ── Subset 7.1: Reserve Fund ───────────────────────────────────
+  const fundOption = KPI7_RESERVE_FUND_OPTIONS.find(
+    (o) => o.value === input.reserveFundLevel,
+  );
+  const fundWeight = fundOption?.weight ?? 0;
+  const scoreA = Math.round(fundWeight * 100 * 100) / 100;
+
+  // ── Subset 7.2: Average Repair Time ───────────────────────────
+  const avgRepairTime =
+    Math.round(
+      (input.totalRepairTimeHours / input.totalUnplannedRepairs) * 1000000,
+    ) / 1000000;
+
+  let scoreB: number;
+  if (avgRepairTime <= 7) {
+    scoreB = 0.5 * 100; // 50
+  } else if (avgRepairTime >= 24) {
+    scoreB = 0;
+  } else {
+    scoreB = Math.round(((24 - avgRepairTime) / 17) * 0.5 * 100 * 100) / 100;
+  }
+
+  // ── Aggregate KPI Score = (a) + (b) ────────────────────────────
+  const averageKpiScore = Math.round((scoreA + scoreB) * 100) / 100;
+
+  const subIndicators: SubIndicatorResult[] = [
+    {
+      name: "Reserve Fund",
+      method: `Score (a) = Weight corresponding to "${input.reserveFundLevel}" × 100 = ${fundWeight} × 100 = ${scoreA}`,
+      result: fundWeight,
+      unit: "letter",
+      scoringRange: "A – D",
+      weight: fundWeight,
+      kpiScore: scoreA,
+    },
+    {
+      name: "Average Repair Time",
+      method: `Total time ${input.totalRepairTimeHours}h / ${input.totalUnplannedRepairs} repairs = ${avgRepairTime.toFixed(2)} hr/event`,
+      result: avgRepairTime,
+      unit: "hr/event",
+      scoringRange: "≤ 7 → 0.5, ≥ 24 → 0",
+      weight: 0.5,
+      kpiScore: scoreB,
+    },
+  ];
+
+  return {
+    kpiNo: 7,
+    kpiName: "Mean Time to Repair (MTTR)",
+    subsetName: "Technical Operation",
+    subIndicators,
+    averageKpiScore,
+    subsetScores: [
+      {
+        name: "(a) Reserve Fund",
+        score: scoreA,
+        weight: 1,
+      },
+      {
+        name: "(b) Average Repair Time",
+        score: scoreB,
+        weight: 1,
+      },
+    ],
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// KPI 8 — Non-Revenue Water (NRW)
+// ═══════════════════════════════════════════════════════════════════════
+
+export const KPI8_NRW_STRATEGY_OPTIONS = [
+  {
+    value: "A" as const,
+    label: "A) No NRW management strategy",
+    weight: 0,
+  },
+  {
+    value: "B" as const,
+    label:
+      "B) An NRW management strategy is developed, but has not yet put it into practice",
+    weight: 0.4,
+  },
+  {
+    value: "C" as const,
+    label:
+      "C) An NRW management strategy has been developed and is being implemented partially",
+    weight: 0.6,
+  },
+  {
+    value: "D" as const,
+    label:
+      "D) A comprehensive NRW management strategy has been developed, which is being implemented by a team dedicated to keeping NRW below 20%",
+    weight: 1,
+  },
+];
+
+export const kpi8InputSchema = z.object({
+  // Subset 8.1 — Management Strategy
+  nrwStrategyLevel: z.enum(["A", "B", "C", "D"], {
+    message: "Select a management strategy level",
+  }),
+  // Subset 8.2 — NRW Ratio
+  totalVolumeSupplied: z
+    .number({ message: "Required" })
+    .positive("Must be positive"),
+  totalVolumeBilled: z
+    .number({ message: "Required" })
+    .min(0, "Cannot be negative"),
+});
+
+export type Kpi8Input = z.infer<typeof kpi8InputSchema>;
+
+export function calculateKpi8(input: Kpi8Input): KpiResult {
+  // ── Subset 8.1: Management Strategy ───────────────────────────
+  const strategyOption = KPI8_NRW_STRATEGY_OPTIONS.find(
+    (o) => o.value === input.nrwStrategyLevel,
+  );
+  const strategyWeight = strategyOption?.weight ?? 0;
+  const scoreA = Math.round(strategyWeight * 100 * 100) / 100;
+
+  // ── Subset 8.2: NRW Ratio ─────────────────────────────────────
+  const nrwRatio =
+    Math.round(
+      ((input.totalVolumeSupplied - input.totalVolumeBilled) /
+        input.totalVolumeSupplied) *
+        100 *
+        100,
+    ) / 100;
+
+  let subset82Score: number;
+  if (nrwRatio <= 20) {
+    subset82Score = 100;
+  } else if (nrwRatio >= 60) {
+    subset82Score = 0;
+  } else {
+    subset82Score = Math.round(((60 - nrwRatio) / 40) * 100 * 100) / 100;
+  }
+
+  // ── Aggregate KPI Score = (a) × 0.5 + (b) × 0.5 ───────────────
+  const averageKpiScore =
+    Math.round((scoreA * 0.5 + subset82Score * 0.5) * 100) / 100;
+
+  const subIndicators: SubIndicatorResult[] = [
+    {
+      name: "Management Strategy",
+      method: `Score (a) = Weight corresponding to "${input.nrwStrategyLevel}" × 100 = ${strategyWeight} × 100 = ${scoreA}`,
+      result: strategyWeight,
+      unit: "letter",
+      scoringRange: "A – D",
+      weight: 0.5,
+      kpiScore: scoreA,
+    },
+    {
+      name: "NRW Ratio",
+      method: `(Supplied ${input.totalVolumeSupplied.toLocaleString()} − Billed ${input.totalVolumeBilled.toLocaleString()}) / Supplied × 100 = ${nrwRatio.toFixed(2)}%`,
+      result: nrwRatio,
+      unit: "%",
+      scoringRange: "≤ 20% → 100, ≥ 60% → 0",
+      weight: 0.5,
+      kpiScore: subset82Score,
+    },
+  ];
+
+  return {
+    kpiNo: 8,
+    kpiName: "Non-Revenue Water (NRW)",
+    subsetName: "Technical Operation",
+    subIndicators,
+    averageKpiScore,
+    subsetScores: [
+      {
+        name: "(a) Management Strategy",
+        score: scoreA,
+        weight: 0.5,
+      },
+      {
+        name: "(b) NRW Ratio",
+        score: subset82Score,
+        weight: 0.5,
+      },
+    ],
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// KPI 9 — Water Tariff and Connection Charge (Affordability)
+// ═══════════════════════════════════════════════════════════════════════
+
+export const kpi9InputSchema = z.object({
+  // Subset 9.1 — Water Affordability
+  monthlyTariff20m3: z
+    .number({ message: "Required" })
+    .min(0, "Cannot be negative"),
+  tdfRecommendedTariff: z
+    .number({ message: "Required" })
+    .positive("Must be positive"),
+  // Subset 9.2 — Connection Affordability
+  connectionCharge: z
+    .number({ message: "Required" })
+    .min(0, "Cannot be negative"),
+  subsidyAmount: z.number({ message: "Required" }).min(0, "Cannot be negative"),
+  avgMonthlyIncomeLowIncome: z
+    .number({ message: "Required" })
+    .positive("Must be positive"),
+});
+
+export type Kpi9Input = z.infer<typeof kpi9InputSchema>;
+
+export function calculateKpi9(input: Kpi9Input): KpiResult {
+  // ── Subset 9.1: Water Affordability ─────────────────────────────
+  const waterAffordability =
+    Math.round(
+      (input.monthlyTariff20m3 / input.tdfRecommendedTariff) * 100 * 100,
+    ) / 100;
+
+  // ── Subset 9.2: Connection Affordability ────────────────────────
+  const annualIncome = input.avgMonthlyIncomeLowIncome * 12;
+  const netConnectionCharge = input.connectionCharge - input.subsidyAmount;
+  const connectionRatio =
+    Math.round((netConnectionCharge / annualIncome) * 100 * 100) / 100;
+  const connectionAffordability =
+    Math.round((100 - connectionRatio) * 100) / 100;
+
+  // ── Aggregate KPI Score = (a) × 0.5 + (b) × 0.5 ───────────────
+  const averageKpiScore =
+    Math.round(
+      (waterAffordability * 0.5 + connectionAffordability * 0.5) * 100,
+    ) / 100;
+
+  const subIndicators: SubIndicatorResult[] = [
+    {
+      name: "Water Affordability",
+      method: `(Monthly tariff ${input.monthlyTariff20m3} / TDF tariff ${input.tdfRecommendedTariff}) × 100 = ${waterAffordability.toFixed(2)}%`,
+      result: waterAffordability,
+      unit: "%",
+      scoringRange: "0 – 100",
+      weight: 0.5,
+      kpiScore: waterAffordability,
+    },
+    {
+      name: "Connection Affordability",
+      method: `100 − (Connection ${netConnectionCharge.toLocaleString()} / Annual income ${annualIncome.toLocaleString()}) × 100 = ${connectionAffordability.toFixed(2)}%`,
+      result: connectionAffordability,
+      unit: "%",
+      scoringRange: "0 – 100",
+      weight: 0.5,
+      kpiScore: connectionAffordability,
+    },
+  ];
+
+  return {
+    kpiNo: 9,
+    kpiName: "Water Tariff & Connection Charge",
+    subsetName: "Affordability",
+    subIndicators,
+    averageKpiScore,
+    subsetScores: [
+      {
+        name: "(a) Water Affordability",
+        score: waterAffordability,
+        weight: 0.5,
+      },
+      {
+        name: "(b) Connection Affordability",
+        score: connectionAffordability,
+        weight: 0.5,
+      },
+    ],
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// KPI 10 — Operating Ratio
+// ═══════════════════════════════════════════════════════════════════════
+
+export const kpi10InputSchema = z.object({
+  // Subset 10.1 — Income vs Cost
+  totalOperatingIncome: z
+    .number({ message: "Required" })
+    .positive("Must be positive"),
+  totalOmCosts: z.number({ message: "Required" }).min(0, "Cannot be negative"),
+});
+
+export type Kpi10Input = z.infer<typeof kpi10InputSchema>;
+
+export function calculateKpi10(input: Kpi10Input): KpiResult {
+  // ── Subset 10.1: Operating Ratio ────────────────────────────────
+  const operatingRatio =
+    Math.round((input.totalOmCosts / input.totalOperatingIncome) * 1000000) /
+    1000000;
+
+  let kpiScore: number;
+  if (operatingRatio <= 0.7) {
+    kpiScore = 100;
+  } else if (operatingRatio >= 1.2) {
+    kpiScore = 0;
+  } else {
+    kpiScore = Math.round(((1.2 - operatingRatio) / 0.5) * 100 * 100) / 100;
+  }
+
+  const subIndicators: SubIndicatorResult[] = [
+    {
+      name: "Income vs Cost",
+      method: `O&M costs ${input.totalOmCosts.toLocaleString()} / Operating income ${input.totalOperatingIncome.toLocaleString()} = ${operatingRatio.toFixed(2)}`,
+      result: operatingRatio,
+      unit: "Rs.",
+      scoringRange: "≤ 0.70 → 100, ≥ 1.20 → 0",
+      weight: 1,
+      kpiScore,
+    },
+  ];
+
+  return {
+    kpiNo: 10,
+    kpiName: "Operating Ratio",
+    subsetName: "Financial Management",
+    subIndicators,
+    averageKpiScore: kpiScore,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// KPI 11 — Contribution to Investment (CTI)
+// ═══════════════════════════════════════════════════════════════════════
+
+export const kpi11InputSchema = z.object({
+  // Subset 11.1 — Capital Investment Expenditure
+  netCashIncome: z.number({ message: "Required" }).min(0, "Cannot be negative"),
+  totalSavings: z.number({ message: "Required" }).min(0, "Cannot be negative"),
+  capitalInvestmentSpent: z
+    .number({ message: "Required" })
+    .min(0, "Cannot be negative"),
+});
+
+export type Kpi11Input = z.infer<typeof kpi11InputSchema>;
+
+export function calculateKpi11(input: Kpi11Input): KpiResult {
+  // ── Subset 11.1: Capital Investment Expenditure ─────────────────
+  const totalAvailable = input.netCashIncome + input.totalSavings;
+  const ctiRatio =
+    Math.round((input.capitalInvestmentSpent / totalAvailable) * 100 * 100) /
+    100;
+
+  let kpiScore: number;
+  if (ctiRatio >= 40) {
+    kpiScore = 100;
+  } else if (ctiRatio < 5) {
+    kpiScore = 0;
+  } else {
+    // Linear interpolation between 5% (score=30) and 40% (score=100)
+    kpiScore =
+      Math.round((0.3 + ((ctiRatio - 5) / 35) * 0.7) * 100 * 100) / 100;
+  }
+
+  const subIndicators: SubIndicatorResult[] = [
+    {
+      name: "Capital Investment Expenditure",
+      method: `Investment ${input.capitalInvestmentSpent.toLocaleString()} / (Income ${input.netCashIncome.toLocaleString()} + Savings ${input.totalSavings.toLocaleString()}) × 100 = ${ctiRatio.toFixed(2)}%`,
+      result: ctiRatio,
+      unit: "%",
+      scoringRange: "≥ 40% → 100, < 5% → 0",
+      weight: 1,
+      kpiScore,
+    },
+  ];
+
+  return {
+    kpiNo: 11,
+    kpiName: "Contribution to Investment (CTI)",
+    subsetName: "Financial Management",
+    subIndicators,
+    averageKpiScore: kpiScore,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// KPI 12 — Financial Accountability
+// ═══════════════════════════════════════════════════════════════════════
+
+export const KPI12_ACCOUNTABILITY_OPTIONS = [
+  {
+    value: "A" as const,
+    label: "A) No accounting ledgers",
+    weight: 0,
+  },
+  {
+    value: "B" as const,
+    label:
+      "B) Manual accounting ledgers as well as complete and accurate cashbooks for both their Petty Cash and Account",
+    weight: 0.5,
+  },
+  {
+    value: "C" as const,
+    label:
+      "C) Manual/spreadsheet-based accounting system, and the utility can generate income and expenditure statements (using generally accepted accounting principles) from their financial records",
+    weight: 0.65,
+  },
+  {
+    value: "D" as const,
+    label:
+      "D) Full-function accounting system, limited manual integration, and led by experienced financial manager",
+    weight: 0.8,
+  },
+  {
+    value: "E" as const,
+    label:
+      "E) Fully integrated financial accounting system in accordance with the Nepal Accounting Standard and the Nepal Financial Reporting Standard",
+    weight: 1,
+  },
+];
+
+export const kpi12InputSchema = z.object({
+  accountabilityLevel: z.enum(["A", "B", "C", "D", "E"], {
+    message: "Select an accountability level",
+  }),
+});
+
+export type Kpi12Input = z.infer<typeof kpi12InputSchema>;
+
+export function calculateKpi12(input: Kpi12Input): KpiResult {
+  const option = KPI12_ACCOUNTABILITY_OPTIONS.find(
+    (o) => o.value === input.accountabilityLevel,
+  );
+  const weight = option?.weight ?? 0;
+  const kpiScore = Math.round(weight * 100 * 100) / 100;
+
+  const subIndicators: SubIndicatorResult[] = [
+    {
+      name: "Financial Accountability",
+      method: `Score = Weight corresponding to "${input.accountabilityLevel}" × 100 = ${weight} × 100 = ${kpiScore}`,
+      result: weight,
+      unit: "letter",
+      scoringRange: "A – E",
+      weight: 1,
+      kpiScore,
+    },
+  ];
+
+  return {
+    kpiNo: 12,
+    kpiName: "Financial Accountability",
+    subsetName: "Financial Management",
+    subIndicators,
+    averageKpiScore: kpiScore,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// KPI 13 — Metering Ratio
+// ═══════════════════════════════════════════════════════════════════════
+
+export const kpi13InputSchema = z.object({
+  totalConnections: z
+    .number({ message: "Required" })
+    .positive("Must be positive"),
+  functionalMeters: z
+    .number({ message: "Required" })
+    .min(0, "Cannot be negative"),
+});
+
+export type Kpi13Input = z.infer<typeof kpi13InputSchema>;
+
+export function calculateKpi13(input: Kpi13Input): KpiResult {
+  const meteringRatio =
+    Math.round(
+      (input.functionalMeters / input.totalConnections) * 100 * 100,
+    ) / 100;
+
+  let kpiScore: number;
+  if (meteringRatio >= 100) {
+    kpiScore = 100;
+  } else if (meteringRatio <= 60) {
+    kpiScore = 0;
+  } else {
+    kpiScore = Math.round(((meteringRatio - 60) / 40) * 100 * 100) / 100;
+  }
+
+  const subIndicators: SubIndicatorResult[] = [
+    {
+      name: "Metering Ratio",
+      method: `Functional meters ${input.functionalMeters.toLocaleString()} / Total connections ${input.totalConnections.toLocaleString()} × 100 = ${meteringRatio.toFixed(2)}%`,
+      result: meteringRatio,
+      unit: "%",
+      scoringRange: "60–100",
+      weight: 1,
+      kpiScore,
+    },
+  ];
+
+  return {
+    kpiNo: 13,
+    kpiName: "Metering Ratio",
+    subsetName: "Commercial Operation",
+    subIndicators,
+    averageKpiScore: kpiScore,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// KPI 14 — Billing and Collection Efficiency
+// ═══════════════════════════════════════════════════════════════════════
+
+export const KPI14_BILLING_METHOD_OPTIONS = [
+  {
+    value: "A" as const,
+    label: "A) Offline and record on register",
+    weight: 0,
+  },
+  {
+    value: "B" as const,
+    label: "B) Offline but record in software",
+    weight: 0.5,
+  },
+  {
+    value: "C" as const,
+    label: "C) Online (e-payment)",
+    weight: 1,
+  },
+];
+
+export const kpi14InputSchema = z.object({
+  // Subset 14.1 — Billing
+  totalKnownConnections: z
+    .number({ message: "Required" })
+    .positive("Must be positive"),
+  connectionsBilled: z
+    .number({ message: "Required" })
+    .min(0, "Cannot be negative"),
+  // Subset 14.2 — Billing Method
+  billingMethod: z.enum(["A", "B", "C"], {
+    message: "Select a billing method",
+  }),
+  // Subset 14.3 — Collection
+  totalAmountBilled: z
+    .number({ message: "Required" })
+    .positive("Must be positive"),
+  totalCashCollected: z
+    .number({ message: "Required" })
+    .min(0, "Cannot be negative"),
+});
+
+export type Kpi14Input = z.infer<typeof kpi14InputSchema>;
+
+export function calculateKpi14(input: Kpi14Input): KpiResult {
+  // ── Subset 14.1: Billing efficiency ───────────────────────────
+  const billingRatio =
+    Math.round(
+      (input.connectionsBilled / input.totalKnownConnections) * 100 * 100,
+    ) / 100;
+
+  // ── Subset 14.2: Billing method letter score ───────────────────
+  const methodOption = KPI14_BILLING_METHOD_OPTIONS.find(
+    (o) => o.value === input.billingMethod,
+  );
+  const methodWeight = methodOption?.weight ?? 0;
+  const methodScore = Math.round(methodWeight * 100 * 100) / 100;
+
+  // ── Subset 14.3: Collection efficiency ─────────────────────────
+  const collectionRatio =
+    Math.round(
+      (input.totalCashCollected / input.totalAmountBilled) * 100 * 100,
+    ) / 100;
+
+  // ── Aggregate = (a)×0.4 + method×0.2 + (b)×0.4, capped at 100 ─
+  const rawAggregate =
+    billingRatio * 0.4 + methodScore * 0.2 + collectionRatio * 0.4;
+  const averageKpiScore = Math.min(
+    Math.round(rawAggregate * 100) / 100,
+    100,
+  );
+
+  const subIndicators: SubIndicatorResult[] = [
+    {
+      name: "Billing Efficiency",
+      method: `Connections billed ${input.connectionsBilled.toLocaleString()} / Known connections ${input.totalKnownConnections.toLocaleString()} × 100 = ${billingRatio.toFixed(2)}%`,
+      result: billingRatio,
+      unit: "%",
+      scoringRange: "0 – 100",
+      weight: 0.4,
+      kpiScore: billingRatio,
+    },
+    {
+      name: "Billing Method",
+      method: `Score = Weight of "${input.billingMethod}" × 100 = ${methodWeight} × 100 = ${methodScore}`,
+      result: methodWeight,
+      unit: "letter",
+      scoringRange: "A – C",
+      weight: 0.2,
+      kpiScore: methodScore,
+    },
+    {
+      name: "Collection Efficiency",
+      method: `Cash collected ${input.totalCashCollected.toLocaleString()} / Amount billed ${input.totalAmountBilled.toLocaleString()} × 100 = ${collectionRatio.toFixed(2)}%`,
+      result: collectionRatio,
+      unit: "%",
+      scoringRange: "0 – 100",
+      weight: 0.4,
+      kpiScore: collectionRatio,
+    },
+  ];
+
+  return {
+    kpiNo: 14,
+    kpiName: "Billing & Collection Efficiency",
+    subsetName: "Commercial Operation",
+    subIndicators,
+    averageKpiScore,
+    subsetScores: [
+      {
+        name: "(a) Billing Efficiency",
+        score: Math.round(billingRatio * 0.4 * 100) / 100,
+        weight: 0.4,
+      },
+      {
+        name: "Billing Method",
+        score: Math.round(methodScore * 0.2 * 100) / 100,
+        weight: 0.2,
+      },
+      {
+        name: "(b) Collection Efficiency",
+        score: Math.round(collectionRatio * 0.4 * 100) / 100,
+        weight: 0.4,
+      },
+    ],
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// KPI 15 — Customer Database Management
+// ═══════════════════════════════════════════════════════════════════════
+
+export const KPI15_DATABASE_OPTIONS = [
+  {
+    value: "A" as const,
+    label: "A) Customer and user records are not documented",
+    weight: 0,
+  },
+  {
+    value: "B" as const,
+    label:
+      "B) Names and addresses of the customers of all connections are recorded in the registration book or paper files, but no information on the number of water users per connection",
+    weight: 0.5,
+  },
+  {
+    value: "C" as const,
+    label:
+      "C) Names and addresses of customers of all connections are recorded, including the number of water users on each connection, in the registration book, paper files, or computerized data sheets",
+    weight: 0.65,
+  },
+  {
+    value: "D" as const,
+    label:
+      "D) A customer database is maintained with all essential data about customers, including the number of water users for each connection, but it is not linked to the billing services",
+    weight: 0.8,
+  },
+  {
+    value: "E" as const,
+    label:
+      "E) An accurate and up-to-date customer database is maintained with all essential data about customers, including the water users of each connection. This database is also linked to the billing services",
+    weight: 1,
+  },
+];
+
+export const kpi15InputSchema = z.object({
+  databaseLevel: z.enum(["A", "B", "C", "D", "E"], {
+    message: "Select a database management level",
+  }),
+});
+
+export type Kpi15Input = z.infer<typeof kpi15InputSchema>;
+
+export function calculateKpi15(input: Kpi15Input): KpiResult {
+  const option = KPI15_DATABASE_OPTIONS.find(
+    (o) => o.value === input.databaseLevel,
+  );
+  const weight = option?.weight ?? 0;
+  const kpiScore = Math.round(weight * 100 * 100) / 100;
+
+  const subIndicators: SubIndicatorResult[] = [
+    {
+      name: "Customer Database Management",
+      method: `Score = Weight corresponding to "${input.databaseLevel}" × 100 = ${weight} × 100 = ${kpiScore}`,
+      result: weight,
+      unit: "letter",
+      scoringRange: "A – E",
+      weight: 1,
+      kpiScore,
+    },
+  ];
+
+  return {
+    kpiNo: 15,
+    kpiName: "Customer Database Management",
+    subsetName: "Commercial Operation",
+    subIndicators,
+    averageKpiScore: kpiScore,
+  };
+}
+

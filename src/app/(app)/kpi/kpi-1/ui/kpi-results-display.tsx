@@ -36,10 +36,10 @@ function getScoreBadgeVariant(
 export function KpiResultsDisplay({ result }: KpiResultsDisplayProps) {
   return (
     <div className="flex flex-col gap-6">
-      <Card className="border-0 bg-card/60 shadow-lg backdrop-blur-sm">
+      <Card className="border-none">
         <CardHeader className="pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-md">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-orange-600 text-white shadow-md">
               <TrendingUp className="size-5" />
             </div>
             <div>
@@ -56,7 +56,7 @@ export function KpiResultsDisplay({ result }: KpiResultsDisplayProps) {
           <div className="overflow-x-auto rounded-lg border">
             <Table>
               <TableHeader>
-                <TableRow className="bg-emerald-600 hover:bg-emerald-600">
+                <TableRow className="bg-gray-900 hover:bg-gray-900">
                   <TableHead className="font-semibold text-white">
                     Sub-Indicator
                   </TableHead>
@@ -79,7 +79,7 @@ export function KpiResultsDisplay({ result }: KpiResultsDisplayProps) {
                       {sub.method}
                     </TableCell>
                     <TableCell
-                      className={`text-right font-mono font-semibold text-sm ${getScoreColor(sub.result)}`}
+                      className={`text-right font-mono font-semibold text-sm ${getScoreColor(sub.kpiScore)}`}
                     >
                       {sub.result.toLocaleString("en-US", {
                         minimumFractionDigits: 2,
@@ -99,7 +99,7 @@ export function KpiResultsDisplay({ result }: KpiResultsDisplayProps) {
         </CardContent>
       </Card>
 
-      <Card className="border-0 bg-card/60 shadow-lg backdrop-blur-sm">
+      <Card className="border-none">
         <CardHeader className="pb-4">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-lg bg-amber-500 text-white shadow-md">
@@ -110,8 +110,7 @@ export function KpiResultsDisplay({ result }: KpiResultsDisplayProps) {
                 KPI Score Calculation
               </CardTitle>
               <p className="text-muted-foreground text-sm">
-                Scoring method: If Result × Weight ≥ 100, Score = 100; else
-                Score = Result × Weight
+                Score = Result × Weight (capped at 100)
               </p>
             </div>
           </div>
@@ -120,7 +119,7 @@ export function KpiResultsDisplay({ result }: KpiResultsDisplayProps) {
           <div className="overflow-x-auto rounded-lg border">
             <Table>
               <TableHeader>
-                <TableRow className="bg-emerald-600 hover:bg-emerald-600">
+                <TableRow className="bg-gray-900 hover:bg-gray-900">
                   <TableHead className="font-semibold text-white">
                     Sub-Indicator
                   </TableHead>
@@ -129,9 +128,6 @@ export function KpiResultsDisplay({ result }: KpiResultsDisplayProps) {
                   </TableHead>
                   <TableHead className="text-center font-semibold text-white">
                     Weight
-                  </TableHead>
-                  <TableHead className="font-semibold text-white">
-                    Calculation Method
                   </TableHead>
                   <TableHead className="text-right font-semibold text-white">
                     KPI Score
@@ -149,12 +145,7 @@ export function KpiResultsDisplay({ result }: KpiResultsDisplayProps) {
                       {sub.scoringRange}
                     </TableCell>
                     <TableCell className="text-center font-mono text-sm">
-                      {sub.weight}
-                    </TableCell>
-                    <TableCell className="max-w-xs text-muted-foreground text-xs">
-                      {sub.result * sub.weight >= 100
-                        ? `Result (${sub.result.toFixed(2)}) × Weight (${sub.weight}) = ${(sub.result * sub.weight).toFixed(2)} ≥ 100 → Score = 100`
-                        : `Result (${sub.result.toFixed(2)}) × Weight (${sub.weight}) = ${(sub.result * sub.weight).toFixed(2)} → Score = ${sub.kpiScore.toFixed(2)}`}
+                      {sub.weight.toFixed(2)}
                     </TableCell>
                     <TableCell className="text-right">
                       <Badge
@@ -170,8 +161,9 @@ export function KpiResultsDisplay({ result }: KpiResultsDisplayProps) {
               </TableBody>
             </Table>
           </div>
-          <div className="mt-6 flex items-center justify-end gap-4 rounded-lg border border-emerald-200 bg-emerald-50/60 p-4 dark:border-emerald-900 dark:bg-emerald-950/20">
-            <span className="font-semibold text-emerald-800 text-sm dark:text-emerald-300">
+
+          <div className="mt-6 flex items-center justify-end gap-4 rounded-lg border border-gray-200 bg-gray-50/60 p-4 dark:border-gray-800 dark:bg-gray-950/20">
+            <span className="font-semibold text-gray-800 text-sm dark:text-gray-300">
               Average KPI Score
             </span>
             <div

@@ -2,6 +2,7 @@
 
 import { Award, TrendingUp } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -11,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+
 import type { KpiResult } from "../../schemas/kpi-schemas";
 
 interface Kpi4ResultsDisplayProps {
@@ -36,7 +37,7 @@ export function Kpi4ResultsDisplay({ result }: Kpi4ResultsDisplayProps) {
   return (
     <div className="flex flex-col gap-6">
       {/* ── Result Calculation ──────────────────────────── */}
-      <Card className="border-0 bg-card/60 shadow-lg backdrop-blur-sm">
+      <Card className="border-none">
         <CardHeader className="pb-4">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-lg bg-orange-600 text-white shadow-md">
@@ -56,23 +57,40 @@ export function Kpi4ResultsDisplay({ result }: Kpi4ResultsDisplayProps) {
           <div className="overflow-x-auto rounded-lg border">
             <Table>
               <TableHeader>
-                <TableRow className="bg-orange-600 hover:bg-orange-600">
-                  <TableHead className="font-semibold text-white">Sub-Indicator</TableHead>
-                  <TableHead className="font-semibold text-white">Method</TableHead>
-                  <TableHead className="font-semibold text-right text-white">Result</TableHead>
-                  <TableHead className="font-semibold text-center text-white">Unit</TableHead>
+                <TableRow className="bg-gray-900 hover:bg-gray-900">
+                  <TableHead className="font-semibold text-white">
+                    Sub-Indicator
+                  </TableHead>
+                  <TableHead className="font-semibold text-white">
+                    Method
+                  </TableHead>
+                  <TableHead className="text-right font-semibold text-white">
+                    Result
+                  </TableHead>
+                  <TableHead className="text-center font-semibold text-white">
+                    Unit
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {result.subIndicators.map((sub) => (
                   <TableRow key={sub.name}>
                     <TableCell className="font-medium">{sub.name}</TableCell>
-                    <TableCell className="max-w-xs text-muted-foreground text-xs">{sub.method}</TableCell>
-                    <TableCell className={`text-right font-mono font-semibold text-sm ${getScoreColor(sub.kpiScore)}`}>
-                      {sub.result.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <TableCell className="max-w-xs text-muted-foreground text-xs">
+                      {sub.method}
+                    </TableCell>
+                    <TableCell
+                      className={`text-right font-mono font-semibold text-sm ${getScoreColor(sub.kpiScore)}`}
+                    >
+                      {sub.result.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant="outline" className="text-xs">{sub.unit}</Badge>
+                      <Badge className="text-xs" variant="outline">
+                        {sub.unit}
+                      </Badge>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -83,7 +101,7 @@ export function Kpi4ResultsDisplay({ result }: Kpi4ResultsDisplayProps) {
       </Card>
 
       {/* ── KPI Score Calculation ─────────────────────────── */}
-      <Card className="border-0 bg-card/60 shadow-lg backdrop-blur-sm">
+      <Card className="border-none">
         <CardHeader className="pb-4">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-lg bg-amber-500 text-white shadow-md">
@@ -103,26 +121,45 @@ export function Kpi4ResultsDisplay({ result }: Kpi4ResultsDisplayProps) {
           <div className="overflow-x-auto rounded-lg border">
             <Table>
               <TableHeader>
-                <TableRow className="bg-orange-600 hover:bg-orange-600">
-                  <TableHead className="font-semibold text-white">Sub-Indicator</TableHead>
-                  <TableHead className="font-semibold text-center text-white">Scoring Range</TableHead>
-                  <TableHead className="font-semibold text-center text-white">Weight</TableHead>
-                  <TableHead className="font-semibold text-right text-white">KPI Score</TableHead>
-                  <TableHead className="font-semibold text-center text-white">Unit</TableHead>
+                <TableRow className="bg-gray-900 hover:bg-gray-900">
+                  <TableHead className="font-semibold text-white">
+                    Sub-Indicator
+                  </TableHead>
+                  <TableHead className="text-center font-semibold text-white">
+                    Scoring Range
+                  </TableHead>
+                  <TableHead className="text-center font-semibold text-white">
+                    Weight
+                  </TableHead>
+                  <TableHead className="text-right font-semibold text-white">
+                    KPI Score
+                  </TableHead>
+                  <TableHead className="text-center font-semibold text-white">
+                    Unit
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {result.subIndicators.map((sub) => (
                   <TableRow key={sub.name}>
                     <TableCell className="font-medium">{sub.name}</TableCell>
-                    <TableCell className="text-center text-sm">{sub.scoringRange}</TableCell>
-                    <TableCell className="text-center font-mono text-sm">{sub.weight.toFixed(2)}</TableCell>
+                    <TableCell className="text-center text-sm">
+                      {sub.scoringRange}
+                    </TableCell>
+                    <TableCell className="text-center font-mono text-sm">
+                      {sub.weight.toFixed(2)}
+                    </TableCell>
                     <TableCell className="text-right">
-                      <Badge variant={getScoreBadgeVariant(sub.kpiScore)} className="font-mono">
+                      <Badge
+                        className="font-mono"
+                        variant={getScoreBadgeVariant(sub.kpiScore)}
+                      >
                         {sub.kpiScore.toFixed(2)}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-center text-sm">{sub.unit}</TableCell>
+                    <TableCell className="text-center text-sm">
+                      {sub.unit}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -138,11 +175,14 @@ export function Kpi4ResultsDisplay({ result }: Kpi4ResultsDisplayProps) {
               <div className="flex flex-col gap-2">
                 {result.subsetScores.map((ss) => (
                   <div
-                    key={ss.name}
                     className="flex items-center justify-between rounded-md bg-muted/50 px-4 py-2"
+                    key={ss.name}
                   >
                     <span className="text-sm">{ss.name}</span>
-                    <Badge variant={getScoreBadgeVariant(ss.score)} className="font-mono">
+                    <Badge
+                      className="font-mono"
+                      variant={getScoreBadgeVariant(ss.score)}
+                    >
                       {ss.score.toFixed(2)}
                     </Badge>
                   </div>
@@ -152,11 +192,13 @@ export function Kpi4ResultsDisplay({ result }: Kpi4ResultsDisplayProps) {
           )}
 
           {/* ── Average KPI Score ─────────────────────────── */}
-          <div className="mt-6 flex items-center justify-end gap-4 rounded-lg border border-orange-200 bg-orange-50/60 p-4 dark:border-orange-900 dark:bg-orange-950/20">
-            <span className="font-semibold text-orange-800 text-sm dark:text-orange-300">
+          <div className="mt-6 flex items-center justify-end gap-4 rounded-lg border border-gray-200 bg-gray-50/60 p-4 dark:border-gray-800 dark:bg-gray-950/20">
+            <span className="font-semibold text-gray-800 text-sm dark:text-gray-300">
               KPI Score (a + b)
             </span>
-            <div className={`rounded-lg px-5 py-2 font-bold text-2xl ${getScoreColor(result.averageKpiScore)}`}>
+            <div
+              className={`rounded-lg px-5 py-2 font-bold text-2xl ${getScoreColor(result.averageKpiScore)}`}
+            >
               {result.averageKpiScore.toFixed(2)}
             </div>
           </div>

@@ -1,5 +1,5 @@
-import { KpiIndex } from "./ui/kpi-index";
+import { redirect } from "next/navigation";
 
 export default function KpiPage() {
-  return <KpiIndex />;
+  redirect("/kpi/kpi-1");
 }

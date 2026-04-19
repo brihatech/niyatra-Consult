@@ -22,7 +22,7 @@ export function KpiCalculatorContainer() {
               KPI Calculator
             </h1>
             <p className="text-muted-foreground text-sm">
-              Level and Quality of Water Supply Service
+              Water Quality & Service
             </p>
           </div>
         </div>

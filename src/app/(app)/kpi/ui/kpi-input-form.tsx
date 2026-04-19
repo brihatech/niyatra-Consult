@@ -93,7 +93,6 @@ export function KpiInputForm({ form, onSubmit, onReset }: KpiInputFormProps) {
 
           <div className="flex items-center gap-3 border-t pt-5">
             <Button className="gap-2" type="submit">
-              <Calculator className="size-4" />
               Calculate KPI
             </Button>
             <Button
