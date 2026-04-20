@@ -1,19 +1,10 @@
-"use client";
-
+import { api } from "@/trpc/react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback, useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-
-import {
-  calculateKpi1,
-  type Kpi1Input,
-  type KpiResult,
-  kpi1InputSchema,
-} from "../../schemas/kpi-schemas";
+import { type Kpi1Input, kpi1InputSchema } from "../../schemas/kpi-schemas";
 
 export function useKpiCalculator() {
-  const [result, setResult] = useState<KpiResult | null>(null);
-
   const form = useForm<Kpi1Input>({
     resolver: zodResolver(kpi1InputSchema),
     defaultValues: {
@@ -25,15 +16,39 @@ export function useKpiCalculator() {
     },
   });
 
-  const onSubmit = useCallback((data: Kpi1Input) => {
-    const calculated = calculateKpi1(data);
-    setResult(calculated);
-  }, []);
+  // Fetch existing entry from backend
+  const { data: entry, refetch, isLoading } = api.kpi.getKpiEntry.useQuery(
+    { kpiNumber: 1 },
+    { refetchOnWindowFocus: false }
+  );
 
-  const onReset = useCallback(() => {
+  // Save entry to backend
+  const saveMutation = api.kpi.saveKpiEntry.useMutation({
+    onSuccess: () => refetch(),
+  });
+
+  // Pre-fill form if entry exists
+  useEffect(() => {
+    if (entry?.inputData) {
+      form.reset(entry.inputData as Kpi1Input);
+    }
+  }, [entry?.inputData]);
+
+  const onSubmit = (data: Kpi1Input) => {
+    saveMutation.mutate({ kpiNumber: 1, inputData: data });
+  };
+
+  const onReset = () => {
     form.reset();
-    setResult(null);
-  }, [form]);
+    refetch();
+  };
 
-  return { form, result, onSubmit, onReset };
+  // Result and details come from backend-calculatedResult (type-safe)
+  let result: unknown = null;
+  const calc = entry?.calculatedResult;
+  if (calc && typeof calc === "object") {
+    result = calc;
+  }
+
+  return { form, result, onSubmit, onReset, isLoading };
 }

@@ -1,3 +1,4 @@
+import { kpiRouter } from "@/app/(app)/kpi/server/kpi.router";
 import { userRouter } from "@/app/(app)/users/server/user.router";
 import { createCallerFactory, createTRPCRouter } from "@/server/api/trpc";
 
@@ -8,6 +9,7 @@ import { createCallerFactory, createTRPCRouter } from "@/server/api/trpc";
  */
 export const appRouter = createTRPCRouter({
   user: userRouter,
+  kpi: kpiRouter,
 });
 
 // export type definition of API

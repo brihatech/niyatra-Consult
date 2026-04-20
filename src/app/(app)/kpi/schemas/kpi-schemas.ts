@@ -17,6 +17,8 @@ export const KPI_GROUPS = [
   "Technical Operation",
   "Financial Management",
   "Commercial Operation",
+  "Consumer Satisfaction",
+  "Organizational Management",
 ] as const;
 
 export type KpiGroup = (typeof KPI_GROUPS)[number];
@@ -126,6 +128,56 @@ export const KPI_LIST: KpiDefinition[] = [
     subtitle: "Customer Database Management",
     href: "/kpi/kpi-15",
     group: "Commercial Operation",
+  },
+  {
+    id: 16,
+    name: "Complaints Handling",
+    subtitle: "Consumer Satisfaction",
+    href: "/kpi/kpi-16",
+    group: "Consumer Satisfaction",
+  },
+  {
+    id: 17,
+    name: "Consumer Satisfaction Level",
+    subtitle: "Consumer Satisfaction",
+    href: "/kpi/kpi-17",
+    group: "Consumer Satisfaction",
+  },
+  {
+    id: 18,
+    name: "Amortization",
+    subtitle: "Organizational Management",
+    href: "/kpi/kpi-18",
+    group: "Organizational Management",
+  },
+  {
+    id: 19,
+    name: "Human Resource Development",
+    subtitle: "Organizational Management",
+    href: "/kpi/kpi-19",
+    group: "Organizational Management",
+  },
+  {
+    id: 20,
+    name: "Gender Equality and Social Inclusion",
+    subtitle: "Organizational Management",
+    href: "/kpi/kpi-20",
+    group: "Organizational Management",
+  },
+  {
+    id: 21,
+    name: "Regularity of Annual General Meeting",
+    subtitle: "Organizational Management",
+    href: "/kpi/kpi-21",
+    group: "Organizational Management",
+  },
+  {
+    id: 22,
+    name: "Organizational Maturity",
+    subtitle:
+      "Environmental sanitation, Relation with LG's, Strategic restructuring",
+    href: "/kpi/kpi-22",
+    group: "Organizational Management",
   },
 ];
 
@@ -1543,9 +1595,8 @@ export type Kpi13Input = z.infer<typeof kpi13InputSchema>;
 
 export function calculateKpi13(input: Kpi13Input): KpiResult {
   const meteringRatio =
-    Math.round(
-      (input.functionalMeters / input.totalConnections) * 100 * 100,
-    ) / 100;
+    Math.round((input.functionalMeters / input.totalConnections) * 100 * 100) /
+    100;
 
   let kpiScore: number;
   if (meteringRatio >= 100) {
@@ -1645,10 +1696,7 @@ export function calculateKpi14(input: Kpi14Input): KpiResult {
   // ── Aggregate = (a)×0.4 + method×0.2 + (b)×0.4, capped at 100 ─
   const rawAggregate =
     billingRatio * 0.4 + methodScore * 0.2 + collectionRatio * 0.4;
-  const averageKpiScore = Math.min(
-    Math.round(rawAggregate * 100) / 100,
-    100,
-  );
+  const averageKpiScore = Math.min(Math.round(rawAggregate * 100) / 100, 100);
 
   const subIndicators: SubIndicatorResult[] = [
     {
@@ -1778,3 +1826,519 @@ export function calculateKpi15(input: Kpi15Input): KpiResult {
   };
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// KPI 16 — Complaints Handling
+// ═══════════════════════════════════════════════════════════════════════
+
+export const KPI16_COMPLAINTS_OPTIONS = [
+  {
+    value: "A" as const,
+    label: "A) No mechanism for logging consumers' complaints",
+    weight: 0,
+  },
+  {
+    value: "B" as const,
+    label:
+      "B) Complaint logbook is kept, but consumers must visit office to register complaints",
+    weight: 0.1,
+  },
+  {
+    value: "C" as const,
+    label:
+      "C) Assigned employee handles complaints lodged in person, at office, or by phone",
+    weight: 0.15,
+  },
+  {
+    value: "D" as const,
+    label:
+      "D) Dedicated complaint unit receives, routes, and tracks complaints systematically",
+    weight: 0.2,
+  },
+];
+
+export const kpi16InputSchema = z.object({
+  complaintsManagementLevel: z.enum(["A", "B", "C", "D"], {
+    message: "Select complaints management level",
+  }),
+  totalComplaintsRecorded: z
+    .number({ message: "Required" })
+    .positive("Must be positive"),
+  complaintsResolved: z
+    .number({ message: "Required" })
+    .min(0, "Cannot be negative"),
+  percentageAddressedOnTime: z
+    .number({ message: "Required" })
+    .min(0, "Must be 0-100")
+    .max(100, "Must be 0-100"),
+  percentageAddressedLate: z
+    .number({ message: "Required" })
+    .min(0, "Must be 0-100")
+    .max(100, "Must be 0-100"),
+  percentageNotAddressed: z
+    .number({ message: "Required" })
+    .min(0, "Must be 0-100")
+    .max(100, "Must be 0-100"),
+});
+
+export type Kpi16Input = z.infer<typeof kpi16InputSchema>;
+
+export function calculateKpi16(input: Kpi16Input): KpiResult {
+  const complaintsOption = KPI16_COMPLAINTS_OPTIONS.find(
+    (option) => option.value === input.complaintsManagementLevel,
+  );
+  const complaintsWeight = complaintsOption?.weight ?? 0;
+  const scoreA = Math.round(complaintsWeight * 100 * 100) / 100;
+
+  const redressRatio =
+    Math.round(
+      (input.complaintsResolved / input.totalComplaintsRecorded) * 100 * 100,
+    ) / 100;
+  const cappedRedressRatio = Math.min(redressRatio, 100);
+  const scoreB = Math.round(cappedRedressRatio * 0.2 * 100) / 100;
+
+  const onTime = input.percentageAddressedOnTime;
+  const late = input.percentageAddressedLate;
+  const notAddressed = input.percentageNotAddressed;
+
+  const scoreC1 = Math.round(onTime * 0.2 * 100) / 100;
+  const scoreC2 = Math.round(late * 0.2 * 100) / 100;
+  const scoreC3 = Math.round(notAddressed * -0.2 * 100) / 100;
+
+  const scoreC = Math.round((scoreC1 + scoreC2 + scoreC3) * 100) / 100;
+
+  const averageKpiScore =
+    Math.round((scoreA + scoreB + scoreC1 + scoreC2 + scoreC3) * 100) / 100;
+
+  const subIndicators: SubIndicatorResult[] = [
+    {
+      name: "Complaints Management",
+      method: `Score (a) = Weight corresponding to "${input.complaintsManagementLevel}" × 100 = ${complaintsWeight} × 100`,
+      result: complaintsWeight,
+      unit: "letter",
+      scoringRange: "A – D",
+      weight: 0.2,
+      kpiScore: scoreA,
+    },
+    {
+      name: "Redress Ratio",
+      method: `(Complaints resolved ${input.complaintsResolved} / Total complaints ${input.totalComplaintsRecorded}) × 100`,
+      result: redressRatio,
+      unit: "%",
+      scoringRange: "0 – 100",
+      weight: 0.2,
+      kpiScore: scoreB,
+    },
+    {
+      name: "A) Complaints addressed on time",
+      method: 'Result = "Data", Score = Result × 0.2',
+      result: onTime,
+      unit: "%",
+      scoringRange: "0 – 100",
+      weight: 0.2,
+      kpiScore: scoreC1,
+    },
+    {
+      name: "B) Complaints addressed, but late",
+      method: 'Result = "Data", Score = Result × 0.2',
+      result: late,
+      unit: "%",
+      scoringRange: "0 – 100",
+      weight: 0.2,
+      kpiScore: scoreC2,
+    },
+    {
+      name: "C) Complaints not addressed",
+      method: 'Result = "Data", Score = Result × (-0.2)',
+      result: notAddressed,
+      unit: "%",
+      scoringRange: "0 – 100",
+      weight: -0.2,
+      kpiScore: scoreC3,
+    },
+  ];
+
+  return {
+    kpiNo: 16,
+    kpiName: "Complaints Handling",
+    subsetName: "Consumer Satisfaction",
+    subIndicators,
+    averageKpiScore,
+    subsetScores: [
+      {
+        name: "(a) Complaints Management",
+        score: scoreA,
+        weight: 0.2,
+      },
+      {
+        name: "(b) Redress Ratio",
+        score: scoreB,
+        weight: 0.2,
+      },
+      {
+        name: "(c) Consumers' Perceptions",
+        score: scoreC,
+        weight: 0.6,
+      },
+    ],
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// KPI 17 — Consumer Satisfaction Level
+// ═══════════════════════════════════════════════════════════════════════
+
+export const KPI17_SURVEY_OPTIONS = [
+  {
+    value: "A" as const,
+    label: "A) User satisfaction survey has not yet been conducted",
+    weight: 0,
+  },
+  {
+    value: "B" as const,
+    label:
+      "B) A user satisfaction survey was conducted in the previous year or during the same year of performance evaluation, but not held regularly",
+    weight: 0.4,
+  },
+  {
+    value: "C" as const,
+    label:
+      "C) User satisfaction surveys are conducted every two years, and the results are made public",
+    weight: 0.7,
+  },
+  {
+    value: "D" as const,
+    label:
+      "D) User satisfaction surveys are conducted annually, and results are made public and reviewed in the annual general meeting",
+    weight: 1,
+  },
+];
+
+export const kpi17InputSchema = z.object({
+  satisfactionSurveyLevel: z.enum(["A", "B", "C", "D"], {
+    message: "Select consumer satisfaction survey level",
+  }),
+  satisfiedConsumers: z
+    .number({ message: "Required" })
+    .min(0, "Must be 0-100")
+    .max(100, "Must be 0-100"),
+});
+
+export type Kpi17Input = z.infer<typeof kpi17InputSchema>;
+
+export function calculateKpi17(input: Kpi17Input): KpiResult {
+  const surveyOption = KPI17_SURVEY_OPTIONS.find(
+    (option) => option.value === input.satisfactionSurveyLevel,
+  );
+  const surveyWeight = surveyOption?.weight ?? 0;
+
+  // (a) Score = "Weight" corresponding to the "Result" × 100
+  const scoreA = Math.round(surveyWeight * 100 * 100) / 100;
+
+  // (b) Score = "Result" × "Weight"
+  const scoreB = Math.round(input.satisfiedConsumers * 0.7 * 100) / 100;
+
+  // Aggregate Score = (a + b)
+  const averageKpiScore = Math.round((scoreA + scoreB) * 100) / 100;
+
+  const subIndicators: SubIndicatorResult[] = [
+    {
+      name: "Consumer Satisfaction Survey Level",
+      method: `Score (a) = Weight corresponding to "${input.satisfactionSurveyLevel}" × 100 = ${surveyWeight} × 100`,
+      result: surveyWeight,
+      unit: "letter",
+      scoringRange: "A – D",
+      weight: 1,
+      kpiScore: scoreA,
+    },
+    {
+      name: "Satisfied Consumers",
+      method: 'Score (b) = "Result" × 0.7',
+      result: input.satisfiedConsumers,
+      unit: "%",
+      scoringRange: "0 – 100",
+      weight: 0.7,
+      kpiScore: scoreB,
+    },
+  ];
+
+  return {
+    kpiNo: 17,
+    kpiName: "Consumer Satisfaction Level",
+    subsetName: "Consumer Satisfaction",
+    subIndicators,
+    averageKpiScore,
+    subsetScores: [
+      {
+        name: "(a) Consumer Satisfaction Survey Level",
+        score: scoreA,
+        weight: 1,
+      },
+      { name: "(b) Satisfied Consumers", score: scoreB, weight: 0.7 },
+    ],
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// KPI 18 — Amortization
+// ═══════════════════════════════════════════════════════════════════════
+
+export const KPI18_DUE_AMOUNT_OPTIONS = [
+  { value: "Y" as const, label: "Yes (Y)", weight: 0 },
+  { value: "N" as const, label: "No (N)", weight: 1 },
+];
+
+export const KPI18_INSTALLMENT_OPTIONS = [
+  {
+    value: "A" as const,
+    label: "A) Utility does not pay any installment",
+    weight: 0,
+  },
+  {
+    value: "B" as const,
+    label: "B) Utility has paid 2 installments",
+    weight: 0.5,
+  },
+  {
+    value: "C" as const,
+    label: "C) Utility has paid 6 installments",
+    weight: 0.65,
+  },
+  {
+    value: "D" as const,
+    label: "D) Utility has paid 10 installments",
+    weight: 0.8,
+  },
+  {
+    value: "E" as const,
+    label: "E) Utility has paid more than 10 installments",
+    weight: 1,
+  },
+];
+
+export const kpi18InputSchema = z.object({
+  hasDueAmount: z.enum(["Y", "N"], { message: "Select due amount status" }),
+  tdfInstallmentLevel: z.enum(["A", "B", "C", "D", "E"], {
+    message: "Select TDF installment level",
+  }),
+});
+
+export type Kpi18Input = z.infer<typeof kpi18InputSchema>;
+
+export function calculateKpi18(input: Kpi18Input): KpiResult {
+  const dueOption = KPI18_DUE_AMOUNT_OPTIONS.find(
+    (option) => option.value === input.hasDueAmount,
+  );
+  const installmentOption = KPI18_INSTALLMENT_OPTIONS.find(
+    (option) => option.value === input.tdfInstallmentLevel,
+  );
+
+  const dueWeight = dueOption?.weight ?? 0;
+  const installmentWeight = installmentOption?.weight ?? 0;
+
+  const scoreA = Math.round(dueWeight * 100 * 100) / 100;
+  const scoreB = Math.round(installmentWeight * 100 * 100) / 100;
+  const averageKpiScore = Math.round((scoreA + scoreB) * 100) / 100;
+
+  return {
+    kpiNo: 18,
+    kpiName: "Amortization",
+    subsetName: "Organizational Management",
+    subIndicators: [
+      {
+        name: "Due Amount",
+        method: `Score (a) = Weight corresponding to "${input.hasDueAmount}" × 100 = ${dueWeight} × 100`,
+        result: dueWeight,
+        unit: "letter",
+        scoringRange: "Y / N",
+        weight: 1,
+        kpiScore: scoreA,
+      },
+      {
+        name: "TDF Loan Installment",
+        method: `Score (b) = Weight corresponding to "${input.tdfInstallmentLevel}" × 100 = ${installmentWeight} × 100`,
+        result: installmentWeight,
+        unit: "letter",
+        scoringRange: "A – E",
+        weight: 1,
+        kpiScore: scoreB,
+      },
+    ],
+    averageKpiScore,
+    subsetScores: [
+      { name: "(a) Due Amount", score: scoreA, weight: 1 },
+      { name: "(b) TDF Loan Installment", score: scoreB, weight: 1 },
+    ],
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// KPI 19 — Human Resource Development (HRD)
+// ═══════════════════════════════════════════════════════════════════════
+
+export const kpi19InputSchema = z.object({
+  totalStaffDetails: z
+    .number({ message: "Required" })
+    .positive("Must be positive"),
+  trainingCoursesCompletedManagerial: z
+    .number({ message: "Required" })
+    .min(0, "Cannot be negative"),
+  trainingCoursesCompletedAccountant: z
+    .number({ message: "Required" })
+    .min(0, "Cannot be negative"),
+  trainingCoursesCompletedEngineer: z
+    .number({ message: "Required" })
+    .min(0, "Cannot be negative"),
+  trainingCoursesCompletedOther: z
+    .number({ message: "Required" })
+    .min(0, "Cannot be negative"),
+});
+
+export type Kpi19Input = z.infer<typeof kpi19InputSchema>;
+
+export function calculateKpi19(input: Kpi19Input): KpiResult {
+  const totalCompleted =
+    input.trainingCoursesCompletedManagerial +
+    input.trainingCoursesCompletedAccountant +
+    input.trainingCoursesCompletedEngineer +
+    input.trainingCoursesCompletedOther;
+
+  const score = Math.round(Math.min(totalCompleted, 100) * 100) / 100;
+
+  return {
+    kpiNo: 19,
+    kpiName: "Human Resource Development",
+    subsetName: "Organizational Management",
+    subIndicators: [
+      {
+        name: "Total Staff Details",
+        method: 'Result = "Data"',
+        result: input.totalStaffDetails,
+        unit: "no.",
+        scoringRange: "0 – 100",
+        weight: 0,
+        kpiScore: 0,
+      },
+      {
+        name: "Percentage of training courses completed",
+        method:
+          "Result = Managerial + Accountant + Engineer + Other (capped at 100)",
+        result: totalCompleted,
+        unit: "%",
+        scoringRange: "0 – 100",
+        weight: 1,
+        kpiScore: score,
+      },
+    ],
+    averageKpiScore: score,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// KPI 20 — Gender Equality and Social Inclusion (GESI)
+// ═══════════════════════════════════════════════════════════════════════
+
+export const KPI20_GENDER_POLICY_OPTIONS = [
+  {
+    value: "A" as const,
+    label:
+      "A) Proportion of women in executive committee is less than 33 percent",
+    weight: 0,
+  },
+  {
+    value: "B" as const,
+    label:
+      "B) Women comprise 33% or more in the committee, but none hold key positions",
+    weight: 0.25,
+  },
+  {
+    value: "C" as const,
+    label: "C) Women comprise 33% or more and one or more hold key positions",
+    weight: 0.4,
+  },
+  {
+    value: "D" as const,
+    label:
+      "D) More than 33% women in committee and one or more hold key positions including Chair",
+    weight: 0.5,
+  },
+];
+
+export const KPI20_SOCIAL_INCLUSION_OPTIONS = [
+  {
+    value: "A" as const,
+    label:
+      "A) Executive committee has no socially excluded or marginalized members",
+    weight: 0,
+  },
+  {
+    value: "B" as const,
+    label:
+      "B) Executive committee includes socially excluded or marginalized people in key positions or as members",
+    weight: 0.5,
+  },
+];
+
+export const kpi20InputSchema = z.object({
+  genderPolicyComplianceLevel: z.enum(["A", "B", "C", "D"], {
+    message: "Select gender policy compliance level",
+  }),
+  socialInclusionPolicyComplianceLevel: z.enum(["A", "B"], {
+    message: "Select social inclusion policy compliance level",
+  }),
+});
+
+export type Kpi20Input = z.infer<typeof kpi20InputSchema>;
+
+export function calculateKpi20(input: Kpi20Input): KpiResult {
+  const genderOption = KPI20_GENDER_POLICY_OPTIONS.find(
+    (option) => option.value === input.genderPolicyComplianceLevel,
+  );
+  const socialOption = KPI20_SOCIAL_INCLUSION_OPTIONS.find(
+    (option) => option.value === input.socialInclusionPolicyComplianceLevel,
+  );
+
+  const weightA = genderOption?.weight ?? 0;
+  const weightB = socialOption?.weight ?? 0;
+  const scoreA = Math.round(weightA * 100 * 100) / 100;
+  const scoreB = Math.round(weightB * 100 * 100) / 100;
+
+  // The reference block displays Aggregate = (a) + (b) + (c). c is kept as 0.
+  const scoreC = 0;
+  const averageKpiScore = Math.round((scoreA + scoreB + scoreC) * 100) / 100;
+
+  return {
+    kpiNo: 20,
+    kpiName: "Gender Equality and Social Inclusion (GESI)",
+    subsetName: "Organizational Management",
+    subIndicators: [
+      {
+        name: "Gender Policy Compliance",
+        method: `Score (a) = Weight corresponding to "${input.genderPolicyComplianceLevel}" × 100 = ${weightA} × 100`,
+        result: weightA,
+        unit: "letter",
+        scoringRange: "A – D",
+        weight: 0.5,
+        kpiScore: scoreA,
+      },
+      {
+        name: "Social Inclusion Policy Compliance",
+        method: `Score (b) = Weight corresponding to "${input.socialInclusionPolicyComplianceLevel}" × 100 = ${weightB} × 100`,
+        result: weightB,
+        unit: "letter",
+        scoringRange: "A – B",
+        weight: 0.5,
+        kpiScore: scoreB,
+      },
+    ],
+    averageKpiScore,
+    subsetScores: [
+      { name: "(a) Gender Policy Compliance", score: scoreA, weight: 0.5 },
+      {
+        name: "(b) Social Inclusion Policy Compliance",
+        score: scoreB,
+        weight: 0.5,
+      },
+      { name: "(c) Additional GESI Compliance", score: scoreC, weight: 0 },
+    ],
+  };
+}

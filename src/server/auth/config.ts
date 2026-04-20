@@ -15,7 +15,12 @@ export const auth = betterAuth({
     enabled: true,
   },
   baseURL: env.BETTER_AUTH_BASE_URL,
-  trustedOrigins: [env.BETTER_AUTH_BASE_URL, env.NEXT_PUBLIC_BASE_URL],
+  trustedOrigins: [
+    env.BETTER_AUTH_BASE_URL,
+    env.NEXT_PUBLIC_BASE_URL,
+    "http://localhost:3000",
+    "http://localhost:3001",
+  ],
   plugins: [
     customSession(async ({ user, session }) => {
       const dbUser = await db.user.findUnique({
