@@ -1,7 +1,9 @@
-import { api } from "@/trpc/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+
+import { api } from "@/trpc/react";
+
 import { type Kpi21Input, kpi21InputSchema } from "../schemas/kpi21-schemas";
 
 export function useKpi21Calculator() {
@@ -11,9 +13,13 @@ export function useKpi21Calculator() {
   });
 
   // Fetch existing entry from backend
-  const { data: entry, refetch, isLoading } = api.kpi.getKpiEntry.useQuery(
+  const {
+    data: entry,
+    refetch,
+    isLoading,
+  } = api.kpi.getKpiEntry.useQuery(
     { kpiNumber: 21 },
-    { refetchOnWindowFocus: false }
+    { refetchOnWindowFocus: false },
   );
 
   // Save entry to backend
@@ -26,7 +32,7 @@ export function useKpi21Calculator() {
     if (entry?.inputData) {
       form.reset(entry.inputData as Kpi21Input);
     }
-  }, [entry?.inputData]);
+  }, [entry?.inputData, form.reset]);
 
   const onSubmit = (data: Kpi21Input) => {
     saveMutation.mutate({ kpiNumber: 21, inputData: data });

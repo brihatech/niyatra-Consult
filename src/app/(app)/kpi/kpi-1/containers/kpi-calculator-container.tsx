@@ -8,10 +8,10 @@ export function KpiCalculatorContainer() {
   const { form, result, onSubmit, onReset, isLoading } = useKpiCalculator();
 
   return (
-    <div className="flex flex-col gap-8 p-6">
+    <div className="flex flex-col gap-8 py-6">
       <KpiInputForm form={form} onReset={onReset} onSubmit={onSubmit} />
       {isLoading ? (
-        <div className="text-center text-muted-foreground py-8">Loading...</div>
+        <div className="py-8 text-center text-muted-foreground">Loading...</div>
       ) : result ? (
         <KpiResultsDisplay result={result} />
       ) : null}

@@ -8,7 +8,7 @@ export function Kpi7CalculatorContainer() {
   const { form, result, onSubmit, onReset } = useKpi7Calculator();
 
   return (
-    <div className="flex flex-col gap-8 p-6">
+    <div className="flex flex-col gap-8 py-6">
       <Kpi7InputForm form={form} onReset={onReset} onSubmit={onSubmit} />
       {result && <Kpi7ResultsDisplay result={result} />}
     </div>

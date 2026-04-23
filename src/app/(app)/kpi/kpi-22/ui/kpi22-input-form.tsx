@@ -94,7 +94,7 @@ export function Kpi22InputForm({
         {renderSection("Environmental sanitation", kpi22SanitationQuestions)}
         {renderSection("Relation with LG's", kpi22LGQuestions)}
         {renderSection("Strategic restructuring", kpi22RestructuringQuestions)}
-        <div className="flex items-center gap-3 border-t pt-5">
+        <div className="-mx-6 flex items-center gap-3 border-t px-6 pt-5 lg:-mx-8 lg:px-8">
           <Button type="submit">Calculate KPI</Button>
           <Button onClick={onReset} type="button" variant="outline">
             <RotateCcw className="mr-2 size-4" />

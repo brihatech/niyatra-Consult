@@ -114,7 +114,7 @@ export function Kpi12InputForm({
             </div>
           </div>
 
-          <div className="flex items-center gap-3 border-t pt-5">
+          <div className="-mx-6 flex items-center gap-3 border-t px-6 pt-5 lg:-mx-8 lg:px-8">
             <Button className="gap-2" type="submit">
               Calculate KPI
             </Button>
